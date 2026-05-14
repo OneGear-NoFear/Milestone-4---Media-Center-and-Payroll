@@ -1,1 +1,101 @@
 
+public class MediaItem {
+
+    private String title;
+
+    private boolean available;
+
+    public MediaItem(String title) {
+
+        this.title = title;
+
+        available = true;
+    }
+
+    public String getTitle() {
+
+        return title;
+    }
+
+    public boolean isAvailable() {
+
+        return available;
+    }
+
+    public void borrowItem() {
+
+        available = false;
+    }
+
+    public void returnItem() {
+
+        available = true;
+    }
+
+    public void display() {
+
+        System.out.println(
+                title +
+                " | Available: " +
+                available
+        );
+    }
+
+    // MOVIE SUBCLASS
+    static class Movie extends MediaItem {
+
+        private String resolution;
+
+        public Movie(
+                String title,
+                String resolution
+        ) {
+
+            super(title);
+
+            this.resolution = resolution;
+        }
+
+        @Override
+        public void display() {
+
+            System.out.println(
+                    "Movie: " +
+                    getTitle() +
+                    " | Resolution: " +
+                    resolution +
+                    " | Available: " +
+                    isAvailable()
+            );
+        }
+    }
+
+    // MUSIC SUBCLASS
+    static class Music extends MediaItem {
+
+        private String artist;
+
+        public Music(
+                String title,
+                String artist
+        ) {
+
+            super(title);
+
+            this.artist = artist;
+        }
+
+        @Override
+        public void display() {
+
+            System.out.println(
+                    "Music: " +
+                    getTitle() +
+                    " | Artist: " +
+                    artist +
+                    " | Available: " +
+                    isAvailable()
+            );
+        }
+    }
+}
