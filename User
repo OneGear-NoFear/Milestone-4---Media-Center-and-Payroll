@@ -1,1 +1,65 @@
+import java.util.ArrayList;
 
+public class User {
+
+    private String name;
+
+    private ArrayList<MediaItem> borrowedList;
+
+    public User(String name) {
+
+        this.name = name;
+
+        borrowedList = new ArrayList<>();
+    }
+
+    public void borrow(MediaItem item) {
+
+        borrowedList.add(item);
+
+        item.borrowItem();
+    }
+
+    public void returnMedia(String title) {
+
+        for (MediaItem item : borrowedList) {
+
+            if (
+                    item.getTitle()
+                    .equalsIgnoreCase(title)
+            ) {
+
+                item.returnItem();
+
+                borrowedList.remove(item);
+
+                System.out.println(
+                        "Returned Successfully."
+                );
+
+                return;
+            }
+        }
+
+        System.out.println(
+                "Media not found."
+        );
+    }
+
+    public void viewBorrowed() {
+
+        if (borrowedList.isEmpty()) {
+
+            System.out.println(
+                    "No Borrowed Media."
+            );
+
+            return;
+        }
+
+        for (MediaItem item : borrowedList) {
+
+            item.display();
+        }
+    }
+}
