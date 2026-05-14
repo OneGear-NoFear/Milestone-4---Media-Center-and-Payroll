@@ -1,0 +1,467 @@
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class MediaCenterAbstractM4 {
+
+    static final String URL = "jdbc:sqlite:Payroll.db";
+
+    public static void main(String[] args) {
+
+        createTable();
+
+        Scanner sc = new Scanner(System.in);
+
+        ArrayList<MediaItem> mediaList = new ArrayList<>();
+
+        User user = new User("Guest");
+
+        loadMedia(mediaList);
+
+        while (true) {
+
+            System.out.println("\n===== MEDIA CENTER =====");
+            System.out.println("1. Add Media");
+            System.out.println("2. View Media");
+            System.out.println("3. Borrow Media");
+            System.out.println("4. Return Media");
+            System.out.println("5. View Borrowed");
+            System.out.println("6. Exit");
+
+            System.out.print("Enter choice: ");
+
+            int choice = sc.nextInt();
+            sc.nextLine();
+
+            switch (choice) {
+
+                case 1:
+
+                    System.out.print("Add Movie or Music: ");
+                    String type = sc.nextLine();
+
+                    System.out.print("Enter Title: ");
+                    String title = sc.nextLine();
+
+                    if (type.equalsIgnoreCase("Movie")) {
+
+                        System.out.print("Enter Resolution: ");
+                        String resolution = sc.nextLine();
+
+                        MediaItem.Movie movie =
+                                new MediaItem.Movie(title, resolution);
+
+                        mediaList.add(movie);
+
+                        saveMedia("Movie", title, resolution);
+
+                    } else if (type.equalsIgnoreCase("Music")) {
+
+                        System.out.print("Enter Artist: ");
+                        String artist = sc.nextLine();
+
+                        MediaItem.Music music =
+                                new MediaItem.Music(title, artist);
+
+                        mediaList.add(music);
+
+                        saveMedia("Music", title, artist);
+
+                    } else {
+
+                        System.out.println("Invalid media type.");
+                    }
+
+                    break;
+
+                case 2:
+
+                    if (mediaList.isEmpty()) {
+
+                        System.out.println("No media available.");
+
+                    } else {
+
+                        for (int i = 0; i < mediaList.size(); i++) {
+
+                            System.out.print(i + ". ");
+
+                            mediaList.get(i).display();
+                        }
+                    }
+
+                    break;
+
+                case 3:
+
+                    if (mediaList.isEmpty()) {
+
+                        System.out.println("No media available.");
+
+                        break;
+                    }
+
+                    for (int i = 0; i < mediaList.size(); i++) {
+
+                        System.out.print(i + ". ");
+
+                        mediaList.get(i).display();
+                    }
+
+                    System.out.print("Enter index to borrow: ");
+
+                    int index = sc.nextInt();
+                    sc.nextLine();
+
+                    if (index >= 0 && index < mediaList.size()) {
+
+                        MediaItem item = mediaList.get(index);
+
+                        if (!item.isAvailable()) {
+
+                            System.out.println("Media already borrowed.");
+
+                            break;
+                        }
+
+                        double amount = 100;
+
+                        System.out.println("\n=== PAYMENT METHOD ===");
+                        System.out.println("1. Card");
+                        System.out.println("2. Cash");
+
+                        System.out.print("Choose payment: ");
+
+                        int payment = sc.nextInt();
+
+                        Pay pay = null;
+
+                        if (payment == 1) {
+
+                            System.out.print("Enter Card Balance: ");
+
+                            double balance = sc.nextDouble();
+
+                            pay = new Card(amount, 0.10, balance);
+
+                        } else if (payment == 2) {
+
+                            System.out.print("Enter Cash Amount: ");
+
+                            double cash = sc.nextDouble();
+
+                            pay = new Cash(amount, 0.05, cash);
+
+                        } else {
+
+                            System.out.println("Invalid payment method.");
+                        }
+
+                        if (pay != null) {
+
+                            pay.run();
+
+                            if (pay.valid()) {
+
+                                user.borrow(item);
+
+                                System.out.println(
+                                        item.getTitle() +
+                                        " borrowed successfully."
+                                );
+                            }
+                        }
+
+                    } else {
+
+                        System.out.println("Invalid index.");
+                    }
+
+                    break;
+
+                case 4:
+
+                    System.out.print("Enter title to return: ");
+
+                    String returnTitle = sc.nextLine();
+
+                    user.returnMedia(returnTitle);
+
+                    break;
+
+                case 5:
+
+                    user.viewBorrowed();
+
+                    break;
+
+                case 6:
+
+                    System.out.println("Goodbye!");
+
+                    return;
+
+                default:
+
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+
+    // CREATE TABLE
+    public static void createTable() {
+
+        String sql =
+                "CREATE TABLE IF NOT EXISTS media (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "type TEXT," +
+                "title TEXT," +
+                "extra TEXT" +
+                ")";
+
+        try (
+                Connection conn =
+                        DriverManager.getConnection(URL);
+
+                Statement stmt =
+                        conn.createStatement()
+        ) {
+
+            stmt.execute(sql);
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Database Error: " +
+                    e.getMessage()
+            );
+        }
+    }
+
+    // SAVE MEDIA
+    public static void saveMedia(
+            String type,
+            String title,
+            String extra
+    ) {
+
+        String sql =
+                "INSERT INTO media(type, title, extra) VALUES(?,?,?)";
+
+        try (
+                Connection conn =
+                        DriverManager.getConnection(URL);
+
+                PreparedStatement pstmt =
+                        conn.prepareStatement(sql)
+        ) {
+
+            pstmt.setString(1, type);
+            pstmt.setString(2, title);
+            pstmt.setString(3, extra);
+
+            pstmt.executeUpdate();
+
+            System.out.println("Saved to database.");
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Save Error: " +
+                    e.getMessage()
+            );
+        }
+    }
+
+    // LOAD MEDIA
+    public static void loadMedia(
+            ArrayList<MediaItem> mediaList
+    ) {
+
+        String sql = "SELECT * FROM media";
+
+        try (
+                Connection conn =
+                        DriverManager.getConnection(URL);
+
+                Statement stmt =
+                        conn.createStatement();
+
+                ResultSet rs =
+                        stmt.executeQuery(sql)
+        ) {
+
+            while (rs.next()) {
+
+                String type =
+                        rs.getString("type");
+
+                String title =
+                        rs.getString("title");
+
+                String extra =
+                        rs.getString("extra");
+
+                if (type.equalsIgnoreCase("Movie")) {
+
+                    mediaList.add(
+                            new MediaItem.Movie(
+                                    title,
+                                    extra
+                            )
+                    );
+
+                } else if (
+                        type.equalsIgnoreCase("Music")
+                ) {
+
+                    mediaList.add(
+                            new MediaItem.Music(
+                                    title,
+                                    extra
+                            )
+                    );
+                }
+            }
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Load Error: " +
+                    e.getMessage()
+            );
+        }
+    }
+}
+
+// ABSTRACT PAYMENT CLASS
+abstract class Pay {
+
+    double amt, disc, vat = 0.12;
+
+    Pay(double a, double d) {
+
+        amt = a;
+        disc = d;
+    }
+
+    double getFinal() {
+
+        return (amt * (1 + vat)) * (1 - disc);
+    }
+
+    void run() {
+
+        System.out.println(
+                "\n===== PROCESSING PAYMENT ====="
+        );
+
+        if (valid()) {
+
+            System.out.printf(
+                    "Original Amount: %.2f\n" +
+                    "VAT Included: %.2f\n" +
+                    "Discount: %.0f%%\n" +
+                    "Final Amount: %.2f\n",
+                    amt,
+                    amt * (1 + vat),
+                    disc * 100,
+                    getFinal()
+            );
+
+            done();
+
+            System.out.println(
+                    "Transaction Completed!"
+            );
+
+        } else {
+
+            System.out.println(
+                    "Payment Validation Failed!"
+            );
+        }
+
+        System.out.println(
+                "=============================="
+        );
+    }
+
+    abstract boolean valid();
+
+    abstract void done();
+}
+
+// CARD PAYMENT
+class Card extends Pay {
+
+    double bal;
+
+    Card(double a, double d, double b) {
+
+        super(a, d);
+
+        bal = b;
+    }
+
+    boolean valid() {
+
+        System.out.println(
+                "Validating Card..."
+        );
+
+        return bal >= getFinal();
+    }
+
+    void done() {
+
+        bal -= getFinal();
+
+        System.out.println(
+                "Card Charged." +
+                "\nRemaining Balance: " +
+                bal
+        );
+    }
+}
+
+// CASH PAYMENT
+class Cash extends Pay {
+
+    double cash;
+
+    Cash(double a, double d, double c) {
+
+        super(a, d);
+
+        cash = c;
+    }
+
+    boolean valid() {
+
+        System.out.println(
+                "Validating Cash..."
+        );
+
+        return cash >= getFinal();
+    }
+
+    void done() {
+
+        System.out.println(
+                "Cash Accepted." +
+                "\nChange: " +
+                (cash - getFinal())
+        );
+    }
+
+    @Override
+    void run() {
+
+        System.out.println(
+                "\n===== CASH PAYMENT ====="
+        );
+
+        super.run();
+    }
+}
