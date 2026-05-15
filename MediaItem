@@ -1,5 +1,4 @@
-
-public class MediaItem {
+class MediaItem {
 
     private String title;
 
@@ -7,9 +6,11 @@ public class MediaItem {
 
     public MediaItem(String title) {
 
-        this.title = title;
+        this.title =
+            title;
 
-        available = true;
+        available =
+            true;
     }
 
     public String getTitle() {
@@ -35,66 +36,76 @@ public class MediaItem {
     public void display() {
 
         System.out.println(
-                title +
-                " | Available: " +
-                available
+            title +
+            " | Available: " +
+            available
         );
     }
 
+    // ============================
     // MOVIE SUBCLASS
-    static class Movie extends MediaItem {
+    // ============================
+
+    static class Movie
+        extends MediaItem {
 
         private String resolution;
 
         public Movie(
-                String title,
-                String resolution
+            String title,
+            String resolution
         ) {
 
             super(title);
 
-            this.resolution = resolution;
+            this.resolution =
+                resolution;
         }
 
         @Override
         public void display() {
 
             System.out.println(
-                    "Movie: " +
-                    getTitle() +
-                    " | Resolution: " +
-                    resolution +
-                    " | Available: " +
-                    isAvailable()
+                "Movie: " +
+                getTitle() +
+                " | Resolution: " +
+                resolution +
+                " | Available: " +
+                isAvailable()
             );
         }
     }
 
+    // ============================
     // MUSIC SUBCLASS
-    static class Music extends MediaItem {
+    // ============================
+
+    static class Music
+        extends MediaItem {
 
         private String artist;
 
         public Music(
-                String title,
-                String artist
+            String title,
+            String artist
         ) {
 
             super(title);
 
-            this.artist = artist;
+            this.artist =
+                artist;
         }
 
         @Override
         public void display() {
 
             System.out.println(
-                    "Music: " +
-                    getTitle() +
-                    " | Artist: " +
-                    artist +
-                    " | Available: " +
-                    isAvailable()
+                "Music: " +
+                getTitle() +
+                " | Artist: " +
+                artist +
+                " | Available: " +
+                isAvailable()
             );
         }
     }
